@@ -11,7 +11,7 @@ import (
 	"github.com/kataras/iris"
 )
 
-type Car struct {
+/* type Car struct {
 	ID    int64  `json:"id"`
 	Model string `json:"model"`
 	Year  int64  `json:"year"`
@@ -24,7 +24,7 @@ type Person struct {
 	Email     string `json:"email"`
 	Cars      []Car  `json:"cars"`
 }
-
+*/
 func main() {
 	app := iris.Default()
 	app.Logger().SetLevel("debug")
@@ -58,6 +58,8 @@ func main() {
 			log.Fatal(err)
 		}
 
+		// create an array of Person Objects
+		// each person also owns multiple cars
 		var people []Person
 
 		json.Unmarshal(responseData, &people)
@@ -67,11 +69,14 @@ func main() {
 		for i := 0; i < len(people); i++ {
 			fmt.Printf("%v owns %v  car(s)\n\n", people[i].FirstName, len(people[i].Cars))
 
-			// iterate throug owner cars
+			// iterate through owner cars
 			for c := range people[i].Cars {
 				fmt.Printf("Make: '%v' Model: '%s'\n", people[i].Cars[c].Make, people[i].Cars[c].Model)
 			}
 		}
+
+		ctx.StatusCode(200)
+		ctx.JSON(people)
 
 	})
 

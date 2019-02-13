@@ -6,26 +6,33 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+
 	"os"
 
 	"github.com/kataras/iris"
 )
 
-/* type Car struct {
-	ID    int64  `json:"id"`
-	Model string `json:"model"`
-	Year  int64  `json:"year"`
-	Make  string `json:"make"`
+//Car Model
+type Car struct {
+	ID    int64  `json:"id,omitempty"`
+	Model string `json:"model,omitempty"`
+	Year  string `json:"year,omitempty"`
+	Make  string `json:"make,omitempty"`
 }
 
+//Person Model
 type Person struct {
-	FirstName string `json:"firstname"`
-	LastName  string `json:"lastname"`
-	Email     string `json:"email"`
-	Cars      []Car  `json:"cars"`
+	ID        string `json:"id"`
+	FirstName string `json:"firstname,omitempty"`
+	LastName  string `json:"lastname,omitempty"`
+	Email     string `json:"email,omitempty"`
+	Cars      []Car  `json:"cars,omitempty"`
 }
-*/
+
 func main() {
+
+	var CAR_API_BASE_URL = "https://cars-rest-api.herokuapp.com/api"
+
 	app := iris.Default()
 	app.Logger().SetLevel("debug")
 
@@ -33,7 +40,7 @@ func main() {
 	app.RegisterView(iris.HTML("./templates", ".html").Layout("layout.html").Reload(true))
 	app.StaticWeb("/", "./static")
 
-	// Render home.html
+	// Render Home View
 	app.Get("/", func(ctx iris.Context) {
 		ctx.ViewData("Title", "Home Page")
 		ctx.ViewData("Name", "oscar")
@@ -42,11 +49,22 @@ func main() {
 		ctx.View("home.html")
 	})
 
-	// REST API Endpoints
-	app.Handle("GET", "/api/person", func(ctx iris.Context) {
+	// REST API Endpoints, group routes by endpoint
+	api := app.Party("/api")
 
-		// call the Cars API
-		response, err := http.Get("https://cars-rest-api.herokuapp.com/api/person")
+	// showing how you can also do an inline function vs a handler.
+	api.Get("/help", func(ctx iris.Context) {
+		ctx.Writef("GET / -- fetch all people\n")
+		ctx.Writef("GET /$id -- fetch a person by id\n")
+		ctx.Writef("POST / -- create new person\n")
+		ctx.Writef("PUT /$id -- update an existing person\n")
+		ctx.Writef("DELETE /$id -- delete an existing person\n")
+	})
+
+	// http://localhost:8080/api/person - get all people
+	api.Get("/person", func(ctx iris.Context) {
+
+		response, err := http.Get(fmt.Sprintf("%s/person", CAR_API_BASE_URL))
 
 		if err != nil {
 			fmt.Print(err.Error())
@@ -60,6 +78,7 @@ func main() {
 
 		// create an array of Person Objects
 		// each person also owns multiple cars
+		// so we iterate through those
 		var people []Person
 
 		json.Unmarshal(responseData, &people)
@@ -77,8 +96,20 @@ func main() {
 
 		ctx.StatusCode(200)
 		ctx.JSON(people)
+	})
+
+	// http://localhost:8080/api/person/42 - get a specific person by Id
+	api.Get("/person/{id:string}", func(ctx iris.Context) {
+		println(ctx.Path())
+
+		// the person id being passed as parameter
+		id := ctx.Params().GetString("id")
+		ctx.Writef("get user by id: %s", id)
 
 	})
+
+	// http://localhost:8080/person/cars - get all cars person owns.
+	api.Get("/person/{id:int}/cars", func(ctx iris.Context) {})
 
 	app.Configure(iris.WithConfiguration(iris.YAML("./config/iris.yaml")))
 	app.Run(iris.Addr(":8080"))

@@ -14,19 +14,19 @@ import (
 
 //Car Model
 type Car struct {
-	ID    int64  `json:"id,omitempty"`
-	Model string `json:"model,omitempty"`
-	Year  string `json:"year,omitempty"`
-	Make  string `json:"make,omitempty"`
+	ID    int64  `json:"id"`
+	Model string `json:"model"`
+	Year  string `json:"year"`
+	Make  string `json:"make"`
 }
 
 //Person Model
 type Person struct {
 	ID        string `json:"id"`
-	FirstName string `json:"firstname,omitempty"`
-	LastName  string `json:"lastname,omitempty"`
-	Email     string `json:"email,omitempty"`
-	Cars      []Car  `json:"cars,omitempty"`
+	FirstName string `json:"firstname"`
+	LastName  string `json:"lastname"`
+	Email     string `json:"email"`
+	Cars      []Car  `json:"cars"`
 }
 
 func main() {
@@ -105,6 +105,26 @@ func main() {
 		// the person id being passed as parameter
 		id := ctx.Params().GetString("id")
 		ctx.Writef("get user by id: %s", id)
+
+		response, err := http.Get(fmt.Sprintf("%s/person/%s", CAR_API_BASE_URL, id))
+
+		if err != nil {
+			fmt.Print(err.Error())
+			os.Exit(1)
+		}
+
+		responseData, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		var person Person
+
+		json.Unmarshal(responseData, &person)
+		//fmt.Printf("%#v", person)
+
+		ctx.StatusCode(200)
+		ctx.JSON(person)
 
 	})
 

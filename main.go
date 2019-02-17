@@ -43,7 +43,7 @@ func main() {
 	// Render Home View
 	app.Get("/", func(ctx iris.Context) {
 		ctx.ViewData("Title", "Home Page")
-		ctx.ViewData("Name", "oscar")
+		ctx.ViewData("Name", "Oscar")
 		ctx.Gzip(true)
 
 		ctx.View("home.html")
@@ -128,8 +128,29 @@ func main() {
 
 	})
 
-	// http://localhost:8080/person/cars - get all cars person owns.
-	api.Get("/person/{id:int}/cars", func(ctx iris.Context) {})
+	// http://localhost:8080/person/4455/cars - get all cars person owns.
+	api.Get("/person/{id:int}/cars", func(ctx iris.Context) {
+
+		id := ctx.Params().GetString("id")
+		response, err := http.Get(fmt.Sprintf("%s/person/%s/cars", CAR_API_BASE_URL, id))
+
+		if err != nil {
+			fmt.Print(err.Error())
+			os.Exit(1)
+		}
+
+		responseData, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		var cars []Car
+
+		json.Unmarshal(responseData, &cars)
+
+		ctx.StatusCode(200)
+		ctx.JSON(cars)
+	})
 
 	app.Configure(iris.WithConfiguration(iris.YAML("./config/iris.yaml")))
 	app.Run(iris.Addr(":8080"))

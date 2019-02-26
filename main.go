@@ -37,22 +37,22 @@ func main() {
 	app.Logger().SetLevel("debug")
 
 	// Load the template files.
-	app.RegisterView(iris.HTML("./templates", ".html").Layout("layout.html").Reload(true))
-	app.StaticWeb("/", "./static")
+	// not serving HTML, if we did, uncomment this
+	// app.RegisterView(iris.HTML("./templates", ".html").Layout("layout.html").Reload(true))
+	// app.StaticWeb("/", "./static")
+	// app.Get("/", func(ctx iris.Context) {
+	// 	ctx.ViewData("Title", "Home Page")
+	// 	ctx.ViewData("Name", "Oscar")
+	// 	ctx.Gzip(true)
 
-	// Render Home View
-	app.Get("/", func(ctx iris.Context) {
-		ctx.ViewData("Title", "Home Page")
-		ctx.ViewData("Name", "Oscar")
-		ctx.Gzip(true)
-
-		ctx.View("home.html")
-	})
+	// 	ctx.View("home.html")
+	// })
 
 	// REST API Endpoints, group routes by endpoint
 	api := app.Party("/api")
 
-	// showing how you can also do an inline function vs a handler.
+	// showing how you can also do an inline function vs a handler
+	// call /api/help
 	api.Get("/help", func(ctx iris.Context) {
 		ctx.Writef("GET / -- fetch all people\n")
 		ctx.Writef("GET /$id -- fetch a person by id\n")
@@ -119,9 +119,7 @@ func main() {
 		}
 
 		var person Person
-
 		json.Unmarshal(responseData, &person)
-		//fmt.Printf("%#v", person)
 
 		ctx.StatusCode(200)
 		ctx.JSON(person)
